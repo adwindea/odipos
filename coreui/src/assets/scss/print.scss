@@ -1,0 +1,105 @@
+.ticket {
+    width: 180px;
+    max-width: 180px;
+
+    font-size: 12px;
+    font-family: 'Times New Roman';
+
+    td,
+    th,
+    tr,
+    table {
+        // border-top: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    td.description,
+    th.description {
+        width: 95px;
+        max-width: 95px;
+    }
+
+    td.quantity,
+    th.quantity {
+        width: 25px;
+        max-width: 25px;
+        word-break: break-all;
+
+    }
+
+    td.righted,
+    th.righted{
+        width: 95px;
+        max-width: 95px;
+        text-align: right;
+        align-content: right;
+        word-break: break-all;
+    }
+
+    td.price,
+    th.price {
+        width: 60px;
+        max-width: 60px;
+        text-align: right;
+        align-content: right;
+        word-break: break-all;
+    }
+
+    td.price-right,
+    th.price-right {
+        width: 60px;
+        max-width: 60px;
+        text-align: right;
+        align-content: right;
+        word-break: break-all;
+    }
+
+    td.title,
+    th.title {
+        width: 60px;
+        max-width: 60px;
+        word-break: break-all;
+        padding: 0;
+        margin: 0;
+    }
+
+    td.detail,
+    th.detail {
+        width: 120px;
+        max-width: 120px;
+        word-break: break-all;
+        padding: 0;
+        margin: 0;
+    }
+
+    .centered {
+        text-align: center;
+        align-content: center;
+    }
+    img {
+        max-width: inherit;
+        width: inherit;
+    }
+
+}
+@media print {
+    // @page {
+    //     size: 58mm 120mm;
+    // }
+    .novis {
+        visibility: hidden;
+    }
+    // body * {
+    //   visibility: hidden;
+    // }
+    // .ticket, .ticket * {
+    //   visibility: visible;
+    // }
+    // .ticket {
+    //   position: absolute;
+    //   left: 0;
+    //   top: 0;
+    // }
+  }
+
+

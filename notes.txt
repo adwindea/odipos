@@ -1,0 +1,5 @@
+npm install without audit fix, composer install
+change api address in main.js
+set database and migrate seeding
+node v14.16.1
+npm v6.14.12
