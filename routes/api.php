@@ -137,20 +137,25 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::get('/roles/move/move-down',    'RolesController@moveDown')->name('roles.down');
     });
 
+    Route::group(['middleware' => 'auth'], function ($router) {
+        Route::prefix('order')->group(function () {
+            Route::get('/',         'OrderController@index')->name('order.index');
+            Route::get('/edit',         'OrderController@edit')->name('order.edit');
+            Route::get('/show',         'OrderController@show')->name('order.show');
+            Route::post('/printOrder', 'OrderController@printOrder')->name('order.printOrder');
+        });
+    });
+
 
     Route::prefix('order')->group(function () {
-        Route::get('/',         'OrderController@index')->name('order.index');
         Route::get('/create',         'OrderController@create')->name('order.create');
-        Route::get('/edit',         'OrderController@edit')->name('order.edit');
-        Route::get('/show',         'OrderController@show')->name('order.show');
-        Route::post('/checkPromotion',         'OrderController@checkPromotion')->name('order.checkPromotion');
-        Route::post('/saveOrder', 'OrderController@saveOrder')->name('order.saveOrder');
-        Route::post('/printOrder', 'OrderController@printOrder')->name('order.printOrder');
-        Route::post('/saveOrderDetail', 'OrderController@saveOrderDetail')->name('order.saveOrderDetail');
         Route::get('/orderItems', 'OrderController@orderItems')->name('order.orderItems');
         Route::post('/addOrderItem', 'OrderController@addOrderItem')->name('order.addOrderItem');
-        Route::post('/removeOrderItem', 'OrderController@removeOrderItem')->name('order.removeOrderItem');
         Route::post('/saveQuantity', 'OrderController@saveQuantity')->name('order.saveQuantity');
+        Route::post('/checkPromotion',         'OrderController@checkPromotion')->name('order.checkPromotion');
+        Route::post('/saveOrder', 'OrderController@saveOrder')->name('order.saveOrder');
+        Route::post('/saveOrderDetail', 'OrderController@saveOrderDetail')->name('order.saveOrderDetail');
+        Route::post('/removeOrderItem', 'OrderController@removeOrderItem')->name('order.removeOrderItem');
         Route::get('/getCategories', 'OrderController@getCategories')->name('order.getCategories');
         Route::get('/listItems', 'OrderController@listItems')->name('order.listItems');
     });

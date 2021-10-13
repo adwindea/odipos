@@ -14,12 +14,13 @@ use App\Models\Promotion;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 
 class OrderController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        // $this->middleware('auth');
         // $this->middleware('admin');
     }
 
@@ -50,28 +51,31 @@ class OrderController extends Controller
             ));
     }
 
-    public function create(){
-        $prefix = date('ymd');
-        $order = Order::where('order_number', 'like', $prefix.'%')
-        // ->where('status', '>', 0)
-        ->orderByDesc('id')
-        ->first();
-        if(empty($order)){
-            $num = $prefix.'001';
+    public function create(Request $request){
+        $cookie = $request->cookie('devId');
+        $order = '';
+        if($cookie){
+            $order = Order::where('dev_id', '=', $cookie)
+            // ->where('status', '=', 0)
+            // ->where('is_saved', false)
+            ->first();
+        }else{
+            $prefix = date('ymd');
+            $order = Order::where('order_number', 'like', $prefix.'%')
+                ->orderByDesc('id')
+                ->first();
+            if(empty($order)){
+                $num = $prefix.'001';
+            }else{
+                $num = $order->order_number + 1;
+            }
             $order = new Order();
             $order->order_number = $num;
-            $order->user_id = Auth::user()->id;
+            $order->dev_id = Crypt::encrypt($num);
+            // $order->user_id = Auth::user()->id;
             $order->uuid = Str::uuid();
             $order->save();
-        }else{
-            if($order->status > 0){
-                $num = $order->order_number + 1;
-                $order = new Order();
-                $order->order_number = $num;
-                $order->user_id = Auth::user()->id;
-                $order->uuid = Str::uuid();
-                $order->save();
-            }
+            $cookie = cookie('devId', $order->dev_id, 120);
         }
         $order->price_total = number_format($order->price_total, 0, '', '.');
         $order->discount = number_format($order->discount, 0, '', '.');
@@ -84,8 +88,45 @@ class OrderController extends Controller
         return response()->json( array(
             'order'  => $order,
             'promo' => $promo,
-            'user' => Auth::user()->name
-        ));
+        ))
+        ->withCookie($cookie);
+
+
+        // $prefix = date('ymd');
+        // $order = Order::where('order_number', 'like', $prefix.'%')
+        // // ->where('status', '>', 0)
+        // ->orderByDesc('id')
+        // ->first();
+        // if(empty($order)){
+        //     $num = $prefix.'001';
+        //     $order = new Order();
+        //     $order->order_number = $num;
+        //     $order->user_id = Auth::user()->id;
+        //     $order->uuid = Str::uuid();
+        //     $order->save();
+        // }else{
+        //     if($order->status > 0){
+        //         $num = $order->order_number + 1;
+        //         $order = new Order();
+        //         $order->order_number = $num;
+        //         $order->user_id = Auth::user()->id;
+        //         $order->uuid = Str::uuid();
+        //         $order->save();
+        //     }
+        // }
+        // $order->price_total = number_format($order->price_total, 0, '', '.');
+        // $order->discount = number_format($order->discount, 0, '', '.');
+        // $order->final_price = number_format($order->final_price, 0, '', '.');
+        // $promo = Promotion::find($order->promotion_id);
+        // if(empty($promo)){
+        //     $promo = new Promotion();
+        //     $promo->code = '';
+        // }
+        // return response()->json( array(
+        //     'order'  => $order,
+        //     'promo' => $promo,
+        //     'user' => Auth::user()->name
+        // ));
     }
 
     public function show(Request $request){
@@ -183,7 +224,7 @@ class OrderController extends Controller
             }
         }
         $order->status = $stat;
-        $order->user_id = Auth::user()->id;
+        // $order->user_id = Auth::user()->id;
         $order->save();
 
         if($stat == 2){
@@ -313,7 +354,7 @@ class OrderController extends Controller
             $orderlog->product_id = $product->id;
             $orderlog->order_id = $order->id;
             $orderlog->quantity = 1;
-            $orderlog->user_id = Auth::user()->id;
+            // $orderlog->user_id = Auth::user()->id;
             $orderlog->uuid = Str::uuid();
             $orderlog->save();
             $order->price_total = $order->price_total + $product->price;

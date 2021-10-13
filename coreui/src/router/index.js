@@ -188,9 +188,6 @@ function configRoutes () {
       redirect: '/order/create',
       name: 'Home',
       component: TheContainer,
-      meta:{
-        requiresUser: true
-      },
       children: [
         {
           path: 'media',
@@ -446,9 +443,6 @@ function configRoutes () {
                     meta: { label: 'Create Order' },
                     name: 'Create Order',
                     component: CreateOrder,
-                    meta:{
-                      requiresUser: true
-                    }
                 },
                 {
                     path: ':uuid/edit',

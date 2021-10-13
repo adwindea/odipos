@@ -17,7 +17,7 @@
 
             <transition name="slide">
                 <CRow>
-                    <CCol col="5">
+                    <CCol md="5">
                         <CCard>
                             <CCardHeader>
                                 <h4>Order {{ order.order_number }}</h4>
@@ -109,13 +109,14 @@
                                 </CCard>
                             </CCardBody>
                             <CCardFooter align='center'>
-                                <CButton color="danger" @click="closeModal = true">Close</CButton>
-                                <CButton color="warning" @click="printReceipt()">Print</CButton>
-                                <CButton color="primary" @click="saveOrder(order.uuid,1)">Save</CButton>
+                                <CButton color="danger" v-if="userRole.includes('admin')" @click="closeModal = true">Close</CButton>
+                                <CButton color="warning" v-if="userRole.includes('admin')" @click="printReceipt()">Print</CButton>
+                                <CButton color="primary" v-if="order.status == 0" @click="saveOrder(order.uuid,1)">Save</CButton>
+                                <CButton color="primary" v-if="order.status == 1 && order.is_paid == 0" @click="confirmPayment(order.uuid)">Confirm Payment</CButton>
                             </CCardFooter>
                         </CCard>
                     </CCol>
-                    <CCol col="7">
+                    <CCol md="7">
                         <!-- <CRow>
                             <CCol>
                                 <CInput placeholder="Search" v-model="itemSearch" @keyup="resetListItem()">
@@ -201,17 +202,18 @@ export default {
             //     {key:'total', _classes:'text-center'},
             // ],
             order: {
-                customer_name: '',
-                customer_email: '',
-                uuid: '',
-                order_number: '',
-                note: '',
-                price_total: '',
-                discount: '',
-                discount_type: '',
-                promotion_id: '',
-                final_price: '',
-                payment_type: ''
+                // customer_name: '',
+                // customer_email: '',
+                // uuid: '',
+                // order_number: '',
+                // note: '',
+                // price_total: '',
+                // discount: '',
+                // discount_type: '',
+                // promotion_id: '',
+                // final_price: '',
+                // payment_type: '',
+                // status: '',
             },
             order_uuid: '',
             order_items: [],
@@ -238,6 +240,7 @@ export default {
             closeModal: false,
             currentUser: '',
             nowTime: '',
+            userRole: localStorage.getItem('roles'),
         }
     },
     methods: {
@@ -251,7 +254,7 @@ export default {
                 self.resetOrderItem();
             }).catch(function (error) {
                 console.log(error);
-                self.$router.push({ path: '/login' });
+                // self.$router.push({ path: '/login' });
             });
         },
         saveDetail(){
@@ -278,7 +281,7 @@ export default {
                     }
                 }else{
                     console.log(error);
-                    self.$router.push({ path: 'login' });
+                    // self.$router.push({ path: 'login' });
                 }
             });
         },
@@ -348,7 +351,7 @@ export default {
                 self.categories = response.data.categories;
             }).catch(function (error) {
                 console.log(error);
-                self.$router.push({ path: '/login' });
+                // self.$router.push({ path: '/login' });
             });
         },
         resetOrderItem(){

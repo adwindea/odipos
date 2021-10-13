@@ -78,6 +78,7 @@ export default {
       axios.post(this.$apiAdress + '/api/logout?token=' + localStorage.getItem("api_token"),{})
       .then(function (response) {
         localStorage.setItem('roles', '');
+        localStorage.setItem('userdata', '');
         self.$router.push({ path: '/login' });
       }).catch(function (error) {
         console.log(error);
