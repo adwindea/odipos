@@ -148,6 +148,8 @@ Route::group(['middleware' => 'api'], function ($router) {
 
 
     Route::prefix('order')->group(function () {
+        Route::get('/getCart',         'OrderController@getCart')->name('order.getCart');
+
         Route::get('/create',         'OrderController@create')->name('order.create');
         Route::get('/orderItems', 'OrderController@orderItems')->name('order.orderItems');
         Route::post('/addOrderItem', 'OrderController@addOrderItem')->name('order.addOrderItem');

@@ -1,5 +1,6 @@
 <style lang="scss">
     @import "../../assets/scss/product-card.scss";
+    @import "../../assets/scss/floating-button.scss";
 </style>
 
 <template>
@@ -15,9 +16,60 @@
                 </footer>
             </CModal>
 
+            <CModal
+            title="Order Cart"
+            :show.sync="cartModal"
+            >
+                <table class="table">
+                    <tr>
+                        <th>Item</th>
+                        <th class="text-center" style="width:125px">Qty</th>
+                        <th class="text-center">Total</th>
+                    </tr>
+                    <tr v-for="(item, $index) in order_items" :key="$index">
+                        <td>{{ item.productName }}</td>
+                        <td>
+                            <CInput
+                                size="sm"
+                                type="text"
+                                placeholder="Qty"
+                                addInputClasses="text-center"
+                                v-model.number="item.quantity"
+                                @keyup="saveQuantity($index)"
+                                @blur="saveQuantity($index)"
+                                >
+                                <template #prepend>
+                                    <CButton size="sm" color="danger" @click="minusQuantity($index)"><CIcon name="cilMinus" height="12"/></CButton>
+                                </template>
+                                <template #append>
+                                    <CButton size="sm" color="success" @click="plusQuantity($index)"><CIcon name="cilPlus" height="12"/></CButton>
+                                </template>
+                            </CInput>
+                        </td>
+                        <td class="text-center">{{ item.totalPrice }}</td>
+                    </tr>
+                    <!-- <tr>
+                        <th colspan="2" >Discount</th>
+                        <th class="text-center">{{ order.discount }}</th>
+                    </tr> -->
+                    <tr>
+                        <th colspan="2" >Total</th>
+                        <th class="text-center">{{ finalPrice }}</th>
+                    </tr>
+                    <infinite-loading spinner="waveDots" :identifier="orderInfId" @infinite="getOrderItems">
+                        <span slot="no-more"></span>
+                    </infinite-loading>
+                </table>
+                <footer slot="footer">
+                    <CButton color="danger" v-if="userRole.includes('admin')" @click="closeModal = true">Close</CButton>
+                    <CButton color="warning" v-if="userRole.includes('admin')" @click="printReceipt()">Print</CButton>
+                    <CButton color="primary" v-if="order.status == 0" @click="saveOrder(order.uuid,1)">Checkout</CButton>
+                    <CButton color="primary" v-if="order.status == 1 && order.is_paid == 0" @click="confirmPayment(order.uuid)">Confirm Payment</CButton>                </footer>
+            </CModal>
+
             <transition name="slide">
                 <CRow>
-                    <CCol md="5">
+                    <!-- <CCol md="5">
                         <CCard>
                             <CCardHeader>
                                 <h4>Order {{ order.order_number }}</h4>
@@ -115,8 +167,8 @@
                                 <CButton color="primary" v-if="order.status == 1 && order.is_paid == 0" @click="confirmPayment(order.uuid)">Confirm Payment</CButton>
                             </CCardFooter>
                         </CCard>
-                    </CCol>
-                    <CCol md="7">
+                    </CCol> -->
+                    <CCol col="12">
                         <!-- <CRow>
                             <CCol>
                                 <CInput placeholder="Search" v-model="itemSearch" @keyup="resetListItem()">
@@ -125,7 +177,7 @@
                             </CCol>
                         </CRow> -->
                         <CRow>
-                            <CCol col="6">
+                            <CCol md="6">
                                 <CSelect
                                     :value.sync="categorySearch"
                                     :plain="true"
@@ -133,13 +185,13 @@
                                     @change="resetListItem()"
                                 />
                             </CCol>
-                            <CCol col="6">
+                            <CCol md="6">
                                 <CInput placeholder="Search" v-model="itemSearch" @keyup="resetListItem()">
                                     <template #append-content><CIcon name="cilMagnifyingGlass"/></template>
                                 </CInput>
                             </CCol>
                             <!-- <div> -->
-                                <CCol  md="6" lg="4" xl="3" v-for="(item, $index) in items" :key="$index">
+                                <CCol col="6" xs="6" md="4" lg="3" xl="2" class="p-1" v-for="(item, $index) in items" :key="$index">
                                     <div class="pc-wrapper">
                                         <div class="pc-container">
                                             <div class="top" v-bind:style="{height: '80%', width:'100%',
@@ -181,6 +233,7 @@
                                 <span slot="no-more"></span>
                             </infinite-loading>
                         </CRow>
+                        <CButton color="primary" @click="openCart()" class="cart-button-float"><CIcon name="cilCart" class="my-cart-button-float" height="18"/></CButton>
                     </CCol>
                 </CRow>
             </transition>
@@ -217,6 +270,7 @@ export default {
             },
             order_uuid: '',
             order_items: [],
+            finalPrice: 0,
             items: [],
             categories: [],
             promotion: {
@@ -238,25 +292,27 @@ export default {
             itemInfId: +new Date(),
             printModal: false,
             closeModal: false,
+            cartModal: false,
             currentUser: '',
             nowTime: '',
             userRole: localStorage.getItem('roles'),
         }
     },
     methods: {
-        getOrderDetail (){
-            let self = this;
-            axios.get(  this.$apiAdress + '/api/order/create?token=' + localStorage.getItem("api_token"))
-            .then(function (response) {
-                self.order= response.data.order;
-                self.promotion= response.data.promo;
-                self.currentUser= response.data.user;
-                self.resetOrderItem();
-            }).catch(function (error) {
-                console.log(error);
-                // self.$router.push({ path: '/login' });
-            });
-        },
+        // getOrderDetail (){
+        //     let self = this;
+        //     axios.get(  this.$apiAdress + '/api/order/create?token=' + localStorage.getItem("api_token"))
+        //     .then(function (response) {
+        //         self.order= response.data.order;
+        //         self.promotion= response.data.promo;
+        //         self.currentUser= response.data.user;
+        //         self.getOrderItems();
+        //         self.resetOrderItem();
+        //     }).catch(function (error) {
+        //         console.log(error);
+        //         // self.$router.push({ path: '/login' });
+        //     });
+        // },
         saveDetail(){
             let self = this;
             axios.post(  this.$apiAdress + '/api/order/saveOrderDetail?token=' + localStorage.getItem("api_token"),
@@ -309,22 +365,22 @@ export default {
         },
         getOrderItems($state) {
             let self = this
-            if(self.order.uuid !== ''){
-                axios.get(this.$apiAdress + '/api/order/orderItems?token=' + localStorage.getItem("api_token"), {
+            // if(self.order.uuid !== ''){
+                axios.get(this.$apiAdress + '/api/order/getCart?token=' + localStorage.getItem("api_token"), {
                     params: {
                         page: self.orderPage,
-                        uuid: self.order.uuid
+                        // uuid: self.order.uuid
                     },
                 }).then(({ data }) => {
-                    if (data.data.length) {
+                    if (data.order_items.data.length) {
                         self.orderPage += 1;
-                        self.order_items.push(...data.data);
+                        self.order_items.push(...data.order_items.data);
                         $state.loaded();
                     } else {
                         $state.complete();
                     }
                 });
-            }
+            // }
         },
         getListItems($state) {
             let self = this
@@ -421,11 +477,11 @@ export default {
             axios.post(  this.$apiAdress + '/api/order/addOrderItem?token=' + localStorage.getItem("api_token"),
                 {
                     uuid: uuid,
-                    order_uuid: self.order.uuid
+                    // order_uuid: self.order.uuid
                 }
             )
             .then(function (response) {
-                self.order = response.data.order
+                // self.order = response.data.order
                 self.resetOrderItem()
             })
         },
@@ -476,14 +532,17 @@ export default {
             .then(function (response) {
                 self.$router.push({path: `${self.order.uuid.toString()}/edit`})
             })
-
+        },
+        openCart(){
+            this.cartModal = true
+            this.getOrderItems()
         }
     },
     components:{
         InfiniteLoading,
     },
     mounted(){
-        this.getOrderDetail();
+        // this.getOrderDetail();
         this.getCategories();
     }
 }

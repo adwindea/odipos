@@ -7,7 +7,7 @@ import { iconsSet as icons } from './assets/icons/icons.js'
 import store from './store'
 // import VueHtmlToPaper from 'vue-html-to-paper';
 
-Vue.prototype.$apiAdress = 'https://odipos.herokuapp.com'
+Vue.prototype.$apiAdress = 'http://dipos.test'
 Vue.config.performance = true
 Vue.use(CoreuiVue)
 // Vue.use(VueHtmlToPaper);

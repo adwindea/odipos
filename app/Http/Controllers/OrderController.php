@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Ingredient;
 use App\Models\Promotion;
+use App\Models\Cart;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -127,6 +128,34 @@ class OrderController extends Controller
         //     'promo' => $promo,
         //     'user' => Auth::user()->name
         // ));
+    }
+
+    public function getCart(Request $request){
+        $cookie = $request->cookie('devId');
+        $carts = '';
+        $finalPrice = 0;
+        if($cookie){
+            $carts = Cart::with('product')
+            ->where('dev_id', '=', $cookie)
+            ->paginate(10);
+            $carts = tap($carts, function($cartInstance) use ($finalPrice) {
+                return $cartInstance->getCollection()->transform(function ($cart) use($finalPrice) {
+                    $finalPrice = $finalPrice + $cart->product->price;
+                    return [
+                        'uuid' => $cart->uuid,
+                        'quantity' => number_format($cart->quantity, 0, '', ''),
+                        'totalPrice' => number_format($cart->quantity*$cart->product->price, 0, ',', '.'),
+                        'productName'=> $cart->product->name,
+                    ];
+                });
+            });
+        }else{
+            $cookie = cookie('devId', Str::uuid(), 2628000);
+        }
+        return response()->json([
+            'order_items' => $carts,
+            'finalPrice' => $finalPrice,
+        ])->withCookie($cookie);
     }
 
     public function show(Request $request){
@@ -342,49 +371,70 @@ class OrderController extends Controller
 
     public function addOrderItem(Request $request){
         $uuid = $request->input('uuid');
-        $order_uuid = $request->input('order_uuid');
+        $devId = $request->cookie('devId');
         $product = Product::where('uuid', '=', $uuid)->first();
-        $order = Order::where('uuid', '=', $order_uuid)->first();
-        $orderlog = OrderLog::where('product_id', '=', $product->id)
-        ->where('order_id', '=', $order->id)
-        ->where('saved', false)
+        $cart = Cart::where('product_id', '=', $product->id)
+        ->where('dev_id', '=', $devId)
         ->first();
-        if(empty($orderlog)){
-            $orderlog = new OrderLog();
-            $orderlog->product_id = $product->id;
-            $orderlog->order_id = $order->id;
-            $orderlog->quantity = 1;
-            // $orderlog->user_id = Auth::user()->id;
-            $orderlog->uuid = Str::uuid();
-            $orderlog->save();
-            $order->price_total = $order->price_total + $product->price;
-            $order->save();
+        if($cart){
+            $cart->quantity = $cart->quantity+1;
+            $cart->save();
+        }else{
+            $cart = Cart::create([
+                'product_id' => $product->id,
+                'quantity' => 1,
+                'dev_id' => $devId,
+                'uuid' => Str::uuid(),
+            ]);
         }
-        $ingredient = Ingredient::where('product_id', '=', $product->id)->get();
-        if(!empty($ingredient)){
-            foreach($ingredient as $i){
-                $rawmatlog = RawmatLog::where('order_log_id', '=', $orderlog->id)
-                ->where('rawmat_id', '=', $i->rawmat_id)
-                ->where('order_id', '=', $order->id)
-                ->where('saved', false)
-                ->first();
-                if(empty($rawmatlog)){
-                    $rawmatlog = new RawmatLog();
-                    $rawmatlog->status = 1;
-                    $rawmatlog->quantity = $i->quantity;
-                    $rawmatlog->rawmat_id = $i->rawmat_id;
-                    $rawmatlog->order_id = $order->id;
-                    $rawmatlog->order_log_id = $orderlog->id;
-                    $rawmatlog->user_id = Auth::user()->id;
-                    $rawmatlog->uuid = Str::uuid();
-                    $rawmatlog->save();
-                }
-            }
-        }
-        $order = $this->countOrderPriceProcessor($order_uuid);
-        $order->price_total = number_format($order->price_total, 0, '', '.');
-        return response()->json( array('success'=>true, 'order'=>$order) );
+        return response()->json( array('success'=>true) );
     }
+
+    // public function addOrderItem(Request $request){
+    //     $uuid = $request->input('uuid');
+    //     $order_uuid = $request->input('order_uuid');
+    //     $product = Product::where('uuid', '=', $uuid)->first();
+    //     $order = Order::where('uuid', '=', $order_uuid)->first();
+    //     $orderlog = OrderLog::where('product_id', '=', $product->id)
+    //     ->where('order_id', '=', $order->id)
+    //     ->where('saved', false)
+    //     ->first();
+    //     if(empty($orderlog)){
+    //         $orderlog = new OrderLog();
+    //         $orderlog->product_id = $product->id;
+    //         $orderlog->order_id = $order->id;
+    //         $orderlog->quantity = 1;
+    //         // $orderlog->user_id = Auth::user()->id;
+    //         $orderlog->uuid = Str::uuid();
+    //         $orderlog->save();
+    //         $order->price_total = $order->price_total + $product->price;
+    //         $order->save();
+    //     }
+    //     $ingredient = Ingredient::where('product_id', '=', $product->id)->get();
+    //     if(!empty($ingredient)){
+    //         foreach($ingredient as $i){
+    //             $rawmatlog = RawmatLog::where('order_log_id', '=', $orderlog->id)
+    //             ->where('rawmat_id', '=', $i->rawmat_id)
+    //             ->where('order_id', '=', $order->id)
+    //             ->where('saved', false)
+    //             ->first();
+    //             if(empty($rawmatlog)){
+    //                 $rawmatlog = new RawmatLog();
+    //                 $rawmatlog->status = 1;
+    //                 $rawmatlog->quantity = $i->quantity;
+    //                 $rawmatlog->rawmat_id = $i->rawmat_id;
+    //                 $rawmatlog->order_id = $order->id;
+    //                 $rawmatlog->order_log_id = $orderlog->id;
+    //                 $rawmatlog->user_id = Auth::user()->id;
+    //                 $rawmatlog->uuid = Str::uuid();
+    //                 $rawmatlog->save();
+    //             }
+    //         }
+    //     }
+    //     $order = $this->countOrderPriceProcessor($order_uuid);
+    //     $order->price_total = number_format($order->price_total, 0, '', '.');
+    //     return response()->json( array('success'=>true, 'order'=>$order) );
+    // }
     public function removeOrderItem(Request $request){
         $uuid = $request->input('uuid');
         $order_uuid = $request->input('order_uuid');
