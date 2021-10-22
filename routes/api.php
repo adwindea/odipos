@@ -160,8 +160,8 @@ Route::group(['middleware' => 'api'], function ($router) {
         Route::post('/removeOrderItem', 'OrderController@removeOrderItem')->name('order.removeOrderItem');
         Route::get('/getCategories', 'OrderController@getCategories')->name('order.getCategories');
         Route::get('/listItems', 'OrderController@listItems')->name('order.listItems');
-        Route::get('/createOrder', 'OrderController@createOrder')->name('order.createOrder');
-        Route::get('/calculateCart', 'OrderController@calculateCart')->name('order.calculateCart');
+        Route::post('/createOrder', 'OrderController@createOrder')->name('order.createOrder');
+        Route::post('/calculateCart', 'OrderController@calculateCart')->name('order.calculateCart');
     });
 
 });
