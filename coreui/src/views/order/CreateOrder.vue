@@ -56,15 +56,17 @@
                         <th colspan="2" >Total</th>
                         <th class="text-center">{{ finalPrice }}</th>
                     </tr>
-                    <infinite-loading spinner="waveDots" :identifier="orderInfId" @infinite="getOrderItems">
+                    <!-- <infinite-loading spinner="waveDots" :identifier="orderInfId" @infinite="getOrderItems">
                         <span slot="no-more"></span>
-                    </infinite-loading>
+                    </infinite-loading> -->
                 </table>
                 <footer slot="footer">
-                    <CButton color="danger" v-if="userRole.includes('admin')" @click="closeModal = true">Close</CButton>
+                    <CButton color="success" @click="checkOut()">Review Order</CButton>
+                    <!-- <CButton color="danger" v-if="userRole.includes('admin')" @click="closeModal = true">Close</CButton>
                     <CButton color="warning" v-if="userRole.includes('admin')" @click="printReceipt()">Print</CButton>
                     <CButton color="primary" v-if="order.status == 0" @click="saveOrder(order.uuid,1)">Checkout</CButton>
-                    <CButton color="primary" v-if="order.status == 1 && order.is_paid == 0" @click="confirmPayment(order.uuid)">Confirm Payment</CButton>                </footer>
+                    <CButton color="primary" v-if="order.status == 1 && order.is_paid == 0" @click="confirmPayment(order.uuid)">Confirm Payment</CButton> -->
+                </footer>
             </CModal>
 
             <transition name="slide">
@@ -372,13 +374,9 @@ export default {
                         // uuid: self.order.uuid
                     },
                 }).then(({ data }) => {
-                    if (data.order_items.data.length) {
-                        self.orderPage += 1;
-                        self.order_items.push(...data.order_items.data);
-                        $state.loaded();
-                    } else {
-                        $state.complete();
-                    }
+                        // self.order_items.push(...data.order_items.data);
+                        self.finalPrice = data.finalPrice
+                        self.order_items = data.order_items
                 });
             // }
         },
@@ -410,11 +408,11 @@ export default {
                 // self.$router.push({ path: '/login' });
             });
         },
-        resetOrderItem(){
-            this.orderPage = 1
-            this.orderInfId += 1
-            this.order_items = []
-        },
+        // resetOrderItem(){
+        //     this.orderPage = 1
+        //     this.orderInfId += 1
+        //     this.order_items = []
+        // },
         resetListItem(){
             this.itemPage = 1
             this.itemInfId += 1
@@ -447,20 +445,18 @@ export default {
                 {
                     uuid: uuid,
                     quantity: quantity,
-                    order_uuid: self.order.uuid
+                    // order_uuid: self.order.uuid
                 }
             )
             .then(function (response) {
-                self.order = response.data.order
-                if(response.data.reload){
-                    self.resetOrderItem()
-                }
+                // self.order = response.data.order
+                self.getOrderItems()
             })
         },
         openCart(){
             this.orderCollapse = !this.orderCollapse
             if(this.orderCollapse){
-                this.resetOrderItem()
+                this.getOrderItems()
             }
         },
         plusQuantity(index){
@@ -482,7 +478,7 @@ export default {
             )
             .then(function (response) {
                 // self.order = response.data.order
-                self.resetOrderItem()
+                self.getOrderItems()
             })
         },
         removeClick(uuid){
@@ -491,13 +487,16 @@ export default {
             axios.post(  this.$apiAdress + '/api/order/removeOrderItem?token=' + localStorage.getItem("api_token"),
                 {
                     uuid: uuid,
-                    order_uuid: self.order.uuid
+                    // order_uuid: self.order.uuid
                 }
             )
             .then(function (response) {
-                self.order = response.data.order
-                self.resetOrderItem()
+                // self.order = response.data.order
+                self.getOrderItems()
             })
+        },
+        checkOut(){
+            this.$router.push({path: `/order/checkout`})
         },
         // openPrintModal(){
         //     let self = this

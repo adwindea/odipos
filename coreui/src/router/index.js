@@ -135,6 +135,7 @@ const EditPromotion = () => import('@/views/promotion/EditPromotion')
 //Order
 const Orders = () => import('@/views/order/Orders')
 const CreateOrder = () => import('@/views/order/CreateOrder')
+const CheckoutOrder = () => import('@/views/order/CheckoutOrder')
 const EditOrder = () => import('@/views/order/EditOrder')
 const PrintOrder = () => import('@/views/order/PrintOrder')
 
@@ -443,6 +444,12 @@ function configRoutes () {
                     meta: { label: 'Create Order' },
                     name: 'Create Order',
                     component: CreateOrder,
+                },
+                {
+                    path: 'checkout',
+                    meta: { label: 'Checkout Order' },
+                    name: 'Checkout Order',
+                    component: CheckoutOrder,
                 },
                 {
                     path: ':uuid/edit',
