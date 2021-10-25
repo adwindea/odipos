@@ -9,4 +9,13 @@ class OrderLog extends Model
 {
     use SoftDeletes;
     protected $table = 'order_logs';
+    protected $hidden = ['id'];
+
+    public function product(){
+        return $this->belongsTo(Product::class);
+    }
+
+    public function getQuantityAttribute(){
+        return number_format($this->attributes['quantity'], 0, '','');
+    }
 }

@@ -136,6 +136,8 @@ const EditPromotion = () => import('@/views/promotion/EditPromotion')
 const Orders = () => import('@/views/order/Orders')
 const CreateOrder = () => import('@/views/order/CreateOrder')
 const CheckoutOrder = () => import('@/views/order/CheckoutOrder')
+const OrderDetail = () => import('@/views/order/OrderDetail')
+const SearchOrder = () => import('@/views/order/SearchOrder')
 const EditOrder = () => import('@/views/order/EditOrder')
 const PrintOrder = () => import('@/views/order/PrintOrder')
 
@@ -450,6 +452,18 @@ function configRoutes () {
                     meta: { label: 'Checkout Order' },
                     name: 'Checkout Order',
                     component: CheckoutOrder,
+                },
+                {
+                    path: ':uuid?/orderDetail',
+                    meta: { label: 'Order Detail' },
+                    name: 'Order Detail',
+                    component: OrderDetail,
+                },
+                {
+                    path: 'search',
+                    meta: { label: 'Search Order' },
+                    name: 'Search Order',
+                    component: SearchOrder,
                 },
                 {
                     path: ':uuid/edit',

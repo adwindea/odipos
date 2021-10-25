@@ -9,4 +9,5 @@ class Rawmat extends Model
 {
     use SoftDeletes;
     protected $table = 'rawmats';
+    protected $hidden = ['id'];
 }

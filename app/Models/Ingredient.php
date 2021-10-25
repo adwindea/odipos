@@ -10,4 +10,6 @@ class Ingredient extends Model
     use SoftDeletes;
     protected $table = 'ingredients';
     protected $fillable = ['product_id'];
+    protected $hidden = ['id'];
+
 }

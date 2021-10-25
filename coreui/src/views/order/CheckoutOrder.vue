@@ -87,13 +87,13 @@
 
 <script>
 import axios from 'axios'
-import InfiniteLoading from 'vue-infinite-loading'
 export default {
     name: 'CheckoutOrder',
     data () {
         return {
             order_items: [],
             payment_type: [
+                {label: 'Select Payment', value:''},
                 {label: 'Cash', value:0},
                 {label: 'Bank Transfer', value:3},
             ],
@@ -104,7 +104,7 @@ export default {
                 discount: '',
                 discount_type: '',
                 promotion_id: '',
-                payment_type: 0,
+                payment_type: '',
                 final_price: 0,
             },
             promotion: {
@@ -162,34 +162,22 @@ export default {
         createOrder() {
             let self = this;
             axios.post(  this.$apiAdress + '/api/order/createOrder?token=' + localStorage.getItem("api_token"), {
-                    params: {
-                        customer_name : self.customer_name,
-                        customer_email : self.customer_email,
-                        note: self.note,
-                        discount: self.discount,
-                        discount_type: self.discount_type,
-                        promotion_id: self.promotion_id,
-                        payment_type: self.payment_type,
-                        final_price: self.final_price,
-                    }
+                    customer_name : self.order.customer_name,
+                    customer_email : self.order.customer_email,
+                    note: self.order.note,
+                    discount: self.order.discount,
+                    discount_type: self.order.discount_type,
+                    promotion_id: self.order.promotion_id,
+                    payment_type: self.order.payment_type,
+                    final_price: self.order.final_price,
+                    total_price: self.order.total_price,
+                    discount: self.order.discount,
                 }
             )
             .then(function (response) {
-
-            }).catch(function (error) {
-                if(error.response.data.message == 'The given data was invalid.'){
-                    self.message = '';
-                    for (let key in error.response.data.errors) {
-                        if (error.response.data.errors.hasOwnProperty(key)) {
-                            self.message += error.response.data.errors[key][0] + '  ';
-                        }
-                    }
-                    self.showAlert();
-                }else{
-                    console.log(error);
-                    self.$router.push({ path: 'login' });
-                }
-            });
+                var uuid = response.data.uuid
+                self.$router.push({path: `${uuid.toString()}/orderDetail`});
+            })
         },
         countDownChanged (dismissCountDown) {
             this.dismissCountDown = dismissCountDown

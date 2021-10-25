@@ -208,6 +208,7 @@ class OrderController extends Controller
         $status = false;
         $disc = 0;
         $price_total = 0;
+        $final_price = 0;
         if(!empty($promo)){
             $carts = Cart::join('products', 'products.id', '=', 'carts.product_id')
             ->where('dev_id', $cookie)
@@ -344,21 +345,32 @@ class OrderController extends Controller
     public function orderItems(Request $request){
         $uuid = $request->input('uuid');
         $order = Order::where('uuid', '=', $uuid)->first();
-        $order_items = OrderLog::join('products', 'products.id', '=', 'order_logs.product_id')
-        ->select('order_logs.*', 'products.name as name', 'products.price as price')
-        ->where('order_id', '=', $order->id)
-        ->paginate(10);
+        $order_items = OrderLog::with('product')
+        ->where('order_id', $order->id)
+        ->get();
         if(!empty($order_items)){
-            foreach($order_items as $key => $value){
-                $order_items[$key]['quantity'] = number_format($value['quantity'], 0, '', '');
-                if($order_items[$key]['saved'] == 0){
-                    $order_items[$key]['saved'] = false;
-                }else{
-                    $order_items[$key]['saved'] = true;
-                }
+            foreach($order_items as $item){
+                $item->total_price = number_format($item->quantity*$item->product->price, 0, '', '.');
+                $item->product->price = number_format($item->product->price, 0, '', '.');
             }
         }
-        return response()->json( $order_items );
+        // $order_items = OrderLog::join('products', 'products.id', '=', 'order_logs.product_id')
+        // ->select('order_logs.*', 'products.name as name', 'products.price as price')
+        // ->where('order_id', '=', $order->id)
+        // ->paginate(10);
+        // if(!empty($order_items)){
+        //     foreach($order_items as $key => $value){
+        //         $order_items[$key]['quantity'] = number_format($value['quantity'], 0, '', '');
+        //         if($order_items[$key]['saved'] == 0){
+        //             $order_items[$key]['saved'] = false;
+        //         }else{
+        //             $order_items[$key]['saved'] = true;
+        //         }
+        //     }
+        // }
+        return response()->json([
+            'order_items'=> $order_items,
+        ]);
     }
 
     public function saveQuantity(Request $request){
@@ -580,7 +592,7 @@ class OrderController extends Controller
         $num = Order::where('order_number', 'like', $prefix.'%')
             ->orderByDesc('id')
             ->first();
-        if(empty($order)){
+        if(empty($num)){
             $num = $prefix.'001';
         }else{
             $num = $num->order_number + 1;
@@ -592,23 +604,106 @@ class OrderController extends Controller
         $order->payment_type = $request->payment_type;
         $order->customer_name = $request->customer_name;
         $order->customer_email = $request->customer_email;
+        $order->price_total = str_replace('.', '', $request->total_price);
+        $order->final_price = str_replace('.', '', $request->final_price);
+        $order->cogs = str_replace('.', '', $request->final_price);
+        $order->discount = str_replace('.', '', $request->discount);
         $order->note = $request->note;
         $order->uuid = Str::uuid();
-        $order->issaved = 1;
+        $order->is_saved = 1;
         $order->dev_id = $devId;
+        $order->token = Str::upper(Str::random(8));
         $order->save();
         $this->calculateCart($order->uuid);
+        return response()->json([
+            'status' => 'ok',
+            'uuid' => $order->uuid,
+        ]);
     }
 
-    // public function calculateCart($uuid){
-    //     $order = Order::where('uuid', $uuid)->first();
-    //     $carts = Cart::with('product')->where('dev_id', $order->dev_id)->get();
-    //     if(!empty($carts)){
-    //         foreach($carts as $cart){
+    public function calculateCart($uuid){
+        $order = Order::where('uuid', $uuid)->first();
+        $carts = Cart::with('product')->where('dev_id', $order->dev_id)->get();
+        if(!empty($carts)){
+            foreach($carts as $cart){
+                $orderlog = new OrderLog();
+                $orderlog->product_id = $cart->product->id;
+                $orderlog->order_id = $order->id;
+                $orderlog->quantity = $cart->quantity;
+                $orderlog->saved = 1;
+                // $orderlog->user_id = Auth::user()->id;
+                $orderlog->uuid = Str::uuid();
+                $orderlog->save();
 
-    //         }
-    //     }
-    // }
+                $ingredient = Ingredient::where('product_id', '=', $cart->product->id)->get();
+                if(!empty($ingredient)){
+                    foreach($ingredient as $i){
+                        $rawmatlog = new RawmatLog();
+                        $rawmatlog->status = 1;
+                        $rawmatlog->quantity = $i->quantity * $cart->quantity;
+                        $rawmatlog->rawmat_id = $i->rawmat_id;
+                        $rawmatlog->order_id = $order->id;
+                        $rawmatlog->order_log_id = $orderlog->id;
+                        $rawmatlog->saved = 1;
+                        // $rawmatlog->user_id = Auth::user()->id;
+                        $rawmatlog->uuid = Str::uuid();
+                        $rawmatlog->save();
+                    }
+                }
+                $cart->delete();
+            }
+        }
+    }
+
+    public function getOrderDetail(Request $request){
+        $uuid = $request->input('uuid');
+        $order = Order::where('uuid', $uuid)->first();
+        return response()->json($order);
+    }
+
+    public function confirmPayment(Request $request){
+        $validatedData = $request->validate([
+            'img' => 'required',
+        ]);
+        $img = $request->input('img');
+        $uuid = $request->input('uuid');
+        if(!empty($img)){
+            $img = str_replace('data:image/png;base64,', '', $img);
+			$img = str_replace('[removed]', '', $img);
+			$img = str_replace(' ', '+', $img);
+            $resource = base64_decode($img);
+            $prefix = Str::random(8);
+            $s3name = 'image/payment/'.$prefix.time().'.png';
+            Storage::disk('s3')->put($s3name, $resource);
+            $filename = Storage::disk('s3')->url($s3name);
+            // $filename = '/storage/image/category/'.$prefix.time().'.png';
+            // $path = storage_path().'/app/public/image/category/'.$prefix.time().'.png';
+            // file_put_contents($path, $resource);
+
+            $order = Order::where('uuid', $uuid)->first();
+            $order->payimage = $filename;
+            $order->is_paid = true;
+            $order->save();
+        }
+        return response()->json([
+            'status'=> 'ok'
+        ]);
+    }
+
+    public function searchOrder(Request $request){
+        $token = $request->input('token');
+        $order = Order::where('token', $token)->first();
+        if($order){
+            return response()->json([
+                'status'=> 'ok',
+                'uuid'=> $order->uuid,
+            ]);
+        }
+        return response()->json([
+            'status'=> 'err',
+            'message'=> 'Order not found!',
+        ]);
+    }
 
     public function printOrder(Request $request){
         $uuid = $request->input('uuid');
