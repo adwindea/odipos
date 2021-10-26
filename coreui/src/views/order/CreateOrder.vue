@@ -552,6 +552,7 @@ export default {
     mounted(){
         // this.getOrderDetail();
         this.getCategories();
+        this.getOrderItems()
     }
 }
 </script>
