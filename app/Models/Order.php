@@ -11,6 +11,12 @@ class Order extends Model
     protected $table = 'orders';
     protected $hidden = ['id'];
 
+    function promotion() {
+        return $this->belongsTo(Promotion::class);
+    }
+    function user() {
+        return $this->belongsTo(User::class);
+    }
     function getPriceTotalAttribute(){
         return number_format($this->attributes['price_total'], 0, '', '.');
     }

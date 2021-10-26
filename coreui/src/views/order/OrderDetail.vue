@@ -97,7 +97,7 @@
                     </CRow>
                 </CCardBody>
 
-                <CCardBody v-if="order.is_saved == 1 && order.is_paid == 1 && order.status == 0">
+                <CCardBody v-if="order.is_saved == 1 && order.is_paid == 1 && order.status == 1">
                     <div class="text-center">
                         <h5>Please wait, payment is being verified <br>
                         Total bill IDR {{ order.final_price }}</h5><br>

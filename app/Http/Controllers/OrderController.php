@@ -26,30 +26,35 @@ class OrderController extends Controller
     }
 
     public function index(){
-        $orders = Order::select('orders.*', 'promotions.amount as amount', 'promotions.max_discount as max_discount', 'users.name as cashier')
-        ->leftJoin('promotions', 'promotions.id', '=', 'orders.promotion_id')
-        ->join('users', 'orders.user_id', '=', 'users.id')
+        $orders = Order::with(['promotion', 'user'])
         ->where('orders.status', '>', 0)
         ->orderByDesc('order_number')
         ->get();
-        $role = Auth::user()->menuroles;
-        $admin = false;
-        if(strpos($role, 'admin') !== false){
-            $admin = true;
-        }
-        if(!empty($orders)){
-            foreach($orders as $key => $value){
-                $orders[$key]['price_total'] = number_format($value['price_total'], 0, '', '.');
-                $orders[$key]['discount'] = number_format($value['discount'], 0, '', '.');
-                $orders[$key]['final_price'] = number_format($value['final_price'], 0, '', '.');
-                $orders[$key]['max_discount'] = number_format($value['max_discount'], 0, '', '.');
-                $orders[$key]['amount'] = number_format($value['amount'], 2, ',', '.');
-            }
-        }
+
+        // $orders = Order::select('orders.*', 'promotions.amount as amount', 'promotions.max_discount as max_discount', 'users.name as cashier')
+        // ->leftJoin('promotions', 'promotions.id', '=', 'orders.promotion_id')
+        // ->join('users', 'orders.user_id', '=', 'users.id')
+        // ->where('orders.status', '>', 0)
+        // ->orderByDesc('order_number')
+        // ->get();
+        // $role = Auth::user()->menuroles;
+        // $admin = false;
+        // if(strpos($role, 'admin') !== false){
+        //     $admin = true;
+        // }
+        // if(!empty($orders)){
+        //     foreach($orders as $key => $value){
+        //         $orders[$key]['price_total'] = number_format($value['price_total'], 0, '', '.');
+        //         $orders[$key]['discount'] = number_format($value['discount'], 0, '', '.');
+        //         $orders[$key]['final_price'] = number_format($value['final_price'], 0, '', '.');
+        //         $orders[$key]['max_discount'] = number_format($value['max_discount'], 0, '', '.');
+        //         $orders[$key]['amount'] = number_format($value['amount'], 2, ',', '.');
+        //     }
+        // }
         return response()->json( array(
             'orders'  => $orders,
-            'role' => $admin
-            ));
+            // 'role' => $admin
+        ));
     }
 
     public function create(Request $request){
@@ -273,7 +278,6 @@ class OrderController extends Controller
 
     public function saveOrder(Request $request){
         $uuid = $request->input('uuid');
-        $stat = $request->input('stat');
         $order = Order::where('uuid', '=', $uuid)->first();
         $orderlog = OrderLog::where('order_id', '=', $order->id)->update(['saved'=>true]);
         $rawmatlog = RawmatLog::where('order_id', '=', $order->id)->where('saved', false)->get();
@@ -286,30 +290,31 @@ class OrderController extends Controller
                 $rawlog->save();
             }
         }
-        $order->status = $stat;
+        $order->status = 2;
+        $order->is_paid = 1;
         // $order->user_id = Auth::user()->id;
         $order->save();
 
-        if($stat == 2){
-            if(!empty($order->promotion_id)){
-                $promo = Promotion::where('id', '=', $order->promotion_id)->first();
-                if($promo->discount_type == 1){
-                    $orderlog = OrderLog::where('order_id', '=', $order->id)->get();
-                    if(!empty($orderlog)){
-                        foreach($orderlog as $ol){
-                            $product = Product::where('id', '=', $ol->product_id)->first();
-                            $ol->discount = ($product->price*$promo->amount/100)*$ol->quantity;
-                            $ol->save();
-                        }
+        // if($stat == 2){
+        if(!empty($order->promotion_id)){
+            $promo = Promotion::where('id', '=', $order->promotion_id)->first();
+            if($promo->discount_type == 1){
+                $orderlog = OrderLog::where('order_id', '=', $order->id)->get();
+                if(!empty($orderlog)){
+                    foreach($orderlog as $ol){
+                        $product = Product::where('id', '=', $ol->product_id)->first();
+                        $ol->discount = ($product->price*$promo->amount/100)*$ol->quantity;
+                        $ol->save();
                     }
                 }
-                $promo->quantity = $promo->quantity - 1;
-                if($promo->quantity == 0){
-                    $promo->status = false;
-                }
-                $promo->save();
             }
+            $promo->quantity = $promo->quantity - 1;
+            if($promo->quantity == 0){
+                $promo->status = false;
+            }
+            $promo->save();
         }
+        // }
 
         return response()->json( array('success'=>true, 'order'=>$order) );
     }
@@ -599,15 +604,15 @@ class OrderController extends Controller
         }
         $order = new Order();
         $order->order_number = $num;
-        $order->status = 0;
+        $order->status = 1;
         $order->promotion_id = $request->promotion_id;
         $order->payment_type = $request->payment_type;
         $order->customer_name = $request->customer_name;
         $order->customer_email = $request->customer_email;
-        $order->price_total = str_replace('.', '', $request->total_price);
+        $order->price_total = !empty($request->total_price) ? str_replace('.', '', $request->total_price) : 0;
         $order->final_price = str_replace('.', '', $request->final_price);
         $order->cogs = str_replace('.', '', $request->final_price);
-        $order->discount = str_replace('.', '', $request->discount);
+        $order->discount = !empty($request->discount) ? str_replace('.', '', $request->discount) : 0;
         $order->note = $request->note;
         $order->uuid = Str::uuid();
         $order->is_saved = 1;
@@ -630,7 +635,7 @@ class OrderController extends Controller
                 $orderlog->product_id = $cart->product->id;
                 $orderlog->order_id = $order->id;
                 $orderlog->quantity = $cart->quantity;
-                $orderlog->saved = 1;
+                $orderlog->saved = 0;
                 // $orderlog->user_id = Auth::user()->id;
                 $orderlog->uuid = Str::uuid();
                 $orderlog->save();
@@ -644,7 +649,7 @@ class OrderController extends Controller
                         $rawmatlog->rawmat_id = $i->rawmat_id;
                         $rawmatlog->order_id = $order->id;
                         $rawmatlog->order_log_id = $orderlog->id;
-                        $rawmatlog->saved = 1;
+                        $rawmatlog->saved = 0;
                         // $rawmatlog->user_id = Auth::user()->id;
                         $rawmatlog->uuid = Str::uuid();
                         $rawmatlog->save();

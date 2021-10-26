@@ -21,7 +21,7 @@ import {
   cibStripe,
   cibPaypal,
   cibGooglePay,
-  cibCcAmex
+  cibCcAmex,
 } from '@coreui/icons'
 import {
   cifUs,
@@ -97,6 +97,7 @@ import {
   cilWarning,
   cilX,
   cilXCircle,
+  cilAccountLogout,
 
 } from '@coreui/icons'
 import { logo } from './logo'
@@ -169,7 +170,8 @@ export const iconsSet = Object.assign(
     cilUserFollow,
     cilWarning,
     cilX,
-    cilXCircle
+    cilXCircle,
+    cilAccountLogout
   },
   {
     cifUs,

@@ -13,7 +13,7 @@
             </CCol>
             <CCol col="12" sm="6" lg="3">
                 <CWidgetIcon
-                :header="product+' Cup(s)'"
+                :header="product+' Item(s)'"
                 text="Products sold"
                 color="warning"
                 :icon-padding="false"
