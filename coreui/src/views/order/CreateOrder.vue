@@ -206,7 +206,7 @@
                                             <div class="bottom" :id="'click'+item.uuid">
                                                 <div class="left">
                                                     <div class="details">
-                                                        <h6>{{item.name}}</h6>
+                                                        <h6 class="scroll-text">{{item.name}}</h6>
                                                         <small>{{item.price}} IDR</small>
                                                     </div>
                                                     <div class="buy" @click="addClick(item.uuid)"><CIcon name="cilCart"></CIcon></div>
@@ -224,7 +224,16 @@
                                         <div class="inside">
                                             <div class="icon"><CIcon name="cilInfo"></CIcon></div>
                                             <div class="contents">
-
+                                                <CRow>
+                                                    <CCol>
+                                                        <h6 style="color:white;">{{item.name}}</h6>
+                                                    </CCol>
+                                                </CRow>
+                                                <CRow class="pt-2">
+                                                    <CCol>
+                                                        <h5 style="color:white;">{{item.price}}</h5>
+                                                    </CCol>
+                                                </CRow>
                                             </div>
                                         </div>
                                     </div>
@@ -535,7 +544,7 @@ export default {
         openCart(){
             this.cartModal = true
             this.getOrderItems()
-        }
+        },
     },
     components:{
         InfiniteLoading,
