@@ -54,15 +54,27 @@
                                 Please complete your transaction at the cashier.</h5>
                             </div>
 
-                            <div v-if="order.payment_type == 3">
-                                <CRow class="pb-2 text-center">
-                                    <CCol>
-                                        <h5>Waiting for payment...<br>
-                                        Total bill IDR {{ order.final_price }}<br></h5>
-                                        <img :src="'/img/bank/bca.png'" style="max-width:240px;"><br>
-                                        <h6>803123456 a/n Segal</h6>
-                                    </CCol>
-                                </CRow>
+                            <div class="text-center" v-if="order.payment_type !== 0">
+                                <div v-if="order.payment_type == 3">
+                                    <CRow class="pb-2 text-center">
+                                        <CCol>
+                                            <h5>Waiting for payment...<br>
+                                            Total bill IDR {{ order.final_price }}<br></h5>
+                                            <img :src="'/img/bank/bca.png'" style="max-width:240px;"><br>
+                                            <h6>803123456 a/n Segal</h6>
+                                        </CCol>
+                                    </CRow>
+                                </div>
+                                <div v-if="order.payment_type == 1">
+                                    <CRow class="pb-2 text-center">
+                                        <CCol>
+                                            <h5>Waiting for payment...<br>
+                                            Total bill IDR {{ order.final_price }}<br></h5>
+                                            <img :src="'/img/bank/qr-code.png'" style="max-width:240px;"><br>
+                                            <h6>(Ini detail QRIS nya)</h6>
+                                        </CCol>
+                                    </CRow>
+                                </div>
                                 <CRow>
                                     <CCol>
                                         <label for="berkas">Confirm Payment</label>

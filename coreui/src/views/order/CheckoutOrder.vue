@@ -10,11 +10,11 @@
                         <CRow>
                             <CCol col="12" md="6">
                                 <!-- <CCardBody class="m-0"> -->
-                                    <CInput label="Name" type="text" placeholder="Name" v-model="order.customer_name"></CInput>
-                                    <CInput label="Email" type="email" placeholder="Email" v-model="order.customer_email"></CInput>
+                                    <CInput label="Name*" type="text" placeholder="Name" v-model="order.customer_name"></CInput>
+                                    <CInput label="Phone Number" type="text" placeholder="Phone Number" v-model="order.customer_email" v-on:keyup="filterNumber()"></CInput>
                                     <CTextarea label="Note" placeholder="Type something here" v-model="order.note"></CTextarea>
                                     <CSelect
-                                        label="Payment"
+                                        label="Payment*"
                                         :value.sync="order.payment_type"
                                         :plain="true"
                                         :options="payment_type"
@@ -95,6 +95,7 @@ export default {
             payment_type: [
                 {label: 'Select Payment', value:''},
                 {label: 'Cash', value:0},
+                {label: 'QRIS', value:1},
                 {label: 'Bank Transfer', value:3},
             ],
             order: {
@@ -185,6 +186,9 @@ export default {
         showAlert () {
             this.dismissCountDown = this.dismissSecs
         },
+        filterNumber () {
+            this.order.customer_email = this.order.customer_email.replace(/\D/g, '')
+        }
     },
     mounted(){
         this.getOrderItems();

@@ -60,12 +60,14 @@
                                     <CBadge v-if="item.status == 2" color="danger">Closed</CBadge>
                                     <br>
                                     <span v-if="item.payment_type == 0">Cash</span>
+                                    <span v-if="item.payment_type == 1">QRIS</span>
                                     <span v-if="item.payment_type == 3">Transfer</span>
                                 </td>
                             </template>
                             <template #customer_name="{item}">
                                 <td>
-                                    {{item.customer_name}}
+                                    {{item.customer_name}}<br>
+                                    {{item.customer_email}}
                                 </td>
                             </template>
                             <template #price_total="{item}">

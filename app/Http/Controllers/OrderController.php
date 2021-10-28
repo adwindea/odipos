@@ -291,8 +291,8 @@ class OrderController extends Controller
             }
         }
         $order->status = 2;
-        $order->is_paid = 1;
-        // $order->user_id = Auth::user()->id;
+        $order->is_paid = true;
+        $order->user_id = Auth::user()->id;
         $order->save();
 
         // if($stat == 2){
@@ -589,7 +589,6 @@ class OrderController extends Controller
     public function createOrder(Request $request){
         $validatedData = $request->validate([
             'customer_name' => 'required|string',
-            'customer_email' => 'required|email',
             'payment_type' => 'required'
         ]);
         $devId = $request->cookie('devId');
