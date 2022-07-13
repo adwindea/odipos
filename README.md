@@ -2,6 +2,8 @@
 
 Point of Sales Single Page Application
 
+[DIPOS](https://github.com/adwindea/dipos) , but with different user action
+
 ## Build With
 
 * [CoreUI](https://coreui.io/)
