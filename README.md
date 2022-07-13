@@ -1,6 +1,6 @@
 # ODIPOS
 
-    [DIPOS](https://github.com/adwindea/dipos) , but with different user action
+[DIPOS](https://github.com/adwindea/dipos) , but with different user action
 
 ## Build With
 
